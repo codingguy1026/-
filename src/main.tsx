@@ -1,8 +1,12 @@
-import React, { FormEvent, useMemo, useState } from 'react'
+import React, { FormEvent, useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import type { Session } from '@supabase/supabase-js'
+import { supabase } from './supabase'
 import './styles.css'
+import './auth.css'
 
-type Modal = 'create' | 'join' | 'quick' | 'game' | null
+type Modal = 'create' | 'join' | 'quick' | 'game' | 'auth' | null
+type AuthMode = 'login' | 'signup'
 
 type Game = {
   id: string
@@ -125,10 +129,51 @@ function App() {
   const [selectedGame, setSelectedGame] = useState<Game>(games[0])
   const [isPublic, setIsPublic] = useState(true)
 
+  const [session, setSession] = useState<Session | null>(null)
+  const [authMode, setAuthMode] = useState<AuthMode>('login')
+  const [authEmail, setAuthEmail] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
+  const [authDisplayName, setAuthDisplayName] = useState('')
+  const [authNotice, setAuthNotice] = useState('')
+  const [authBusy, setAuthBusy] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return
+      setSession(data.session)
+      const displayName = data.session?.user.user_metadata?.display_name
+      if (typeof displayName === 'string' && displayName.trim()) {
+        setNickname((current) => current || displayName)
+      }
+    })
+
+    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession)
+      const displayName = nextSession?.user.user_metadata?.display_name
+      if (typeof displayName === 'string' && displayName.trim()) {
+        setNickname((current) => current || displayName)
+      }
+    })
+
+    return () => {
+      mounted = false
+      data.subscription.unsubscribe()
+    }
+  }, [])
+
   const inviteLink = useMemo(() => {
     if (!createdCode) return ''
     return `${window.location.origin}${window.location.pathname}?room=${createdCode}`
   }, [createdCode])
+
+  const accountName = useMemo(() => {
+    if (!session) return ''
+    const displayName = session.user.user_metadata?.display_name
+    if (typeof displayName === 'string' && displayName.trim()) return displayName
+    return session.user.email?.split('@')[0] ?? '플레이어'
+  }, [session])
 
   const requireNickname = () => {
     if (!nickname.trim()) {
@@ -161,6 +206,12 @@ function App() {
     setModal('game')
   }
 
+  const openAuth = (mode: AuthMode = 'login') => {
+    setAuthMode(mode)
+    setAuthNotice('')
+    setModal('auth')
+  }
+
   const submitJoin = (event: FormEvent) => {
     event.preventDefault()
     const code = roomCode.trim().toUpperCase()
@@ -181,6 +232,70 @@ function App() {
     }
   }
 
+  const submitAuth = async (event: FormEvent) => {
+    event.preventDefault()
+    const email = authEmail.trim()
+
+    if (!email || !authPassword) {
+      setAuthNotice('이메일과 비밀번호를 입력해 줘.')
+      return
+    }
+
+    if (authPassword.length < 6) {
+      setAuthNotice('비밀번호는 6자 이상으로 만들어 줘.')
+      return
+    }
+
+    setAuthBusy(true)
+    setAuthNotice('')
+
+    try {
+      if (authMode === 'login') {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password: authPassword,
+        })
+
+        if (error) throw error
+        setModal(null)
+        setNotice('로그인 완료! 계정으로 플레이 중이야 ✨')
+      } else {
+        const displayName = authDisplayName.trim() || nickname.trim() || '플레이어'
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password: authPassword,
+          options: {
+            data: { display_name: displayName },
+          },
+        })
+
+        if (error) throw error
+        setNickname((current) => current || displayName)
+
+        if (data.session) {
+          setModal(null)
+          setNotice('계정 생성 완료! 로그인 상태로 시작할게 🎉')
+        } else {
+          setAuthNotice('계정을 만들었어! 이메일 확인이 켜져 있다면 받은 메일에서 확인한 뒤 로그인해 줘.')
+          setAuthMode('login')
+        }
+      }
+    } catch (error) {
+      setAuthNotice(error instanceof Error ? error.message : '로그인 중 문제가 생겼어. 다시 시도해 줘.')
+    } finally {
+      setAuthBusy(false)
+    }
+  }
+
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      setNotice('로그아웃 중 문제가 생겼어.')
+      return
+    }
+    setNotice('로그아웃했어. 게스트로 계속 플레이할 수 있어!')
+  }
+
   return (
     <main className="site-shell" id="top">
       <div className="page-wrap">
@@ -194,6 +309,15 @@ function App() {
             <a href="#games">게임 찾기</a>
             <a href="#start">빠른 시작</a>
             <span className="nav-pill"><span className="status-dot" /> ONLINE PLAYGROUND</span>
+            {session ? (
+              <button className="account-pill" type="button" onClick={logout} title="로그아웃">
+                <span className="account-avatar">{accountName.slice(0, 1).toUpperCase()}</span>
+                <span>{accountName}</span>
+                <small>로그아웃</small>
+              </button>
+            ) : (
+              <button className="login-button" type="button" onClick={() => openAuth('login')}>로그인</button>
+            )}
           </nav>
         </header>
 
@@ -206,7 +330,7 @@ function App() {
               친구가 있다면 코드로 같은 방에 모이면 되고.
             </p>
             <div className="hero-tags">
-              <span>가입 없이</span><span>가벼운 한 판</span><span>과금 유도 없음</span>
+              <span>게스트 플레이</span><span>가벼운 한 판</span><span>과금 유도 없음</span>
             </div>
           </div>
 
@@ -240,7 +364,14 @@ function App() {
               <button onClick={openJoin}>코드로 입장</button>
             </div>
 
-            <p className="signup-note"><ShieldIcon /> 닉네임 하나면 준비 끝</p>
+            {session ? (
+              <p className="signed-in-note"><span className="status-dot" /> {accountName} 계정에 연결됨</p>
+            ) : (
+              <button className="inline-login" type="button" onClick={() => openAuth('login')}>
+                계정으로 로그인하면 닉네임·전적을 저장할 수 있어 →
+              </button>
+            )}
+            <p className="signup-note"><ShieldIcon /> 로그인 없이도 게스트로 바로 플레이</p>
           </aside>
         </section>
 
@@ -285,7 +416,7 @@ function App() {
             <p>빠른 시작은 사람이 있는 공개방을 찾아 들어가고, 없으면 새 공개방을 만드는 흐름으로 연결할 예정이야.</p>
           </div>
           <div className="lobby-flow" aria-label="빠른 시작 흐름">
-            <article><b>01</b><strong>닉네임 정하기</strong><span>계정 없이 입장</span></article>
+            <article><b>01</b><strong>닉네임 정하기</strong><span>게스트 또는 계정</span></article>
             <i>→</i>
             <article><b>02</b><strong>게임 자동 선택</strong><span>또는 직접 고르기</span></article>
             <i>→</i>
@@ -365,6 +496,62 @@ function App() {
                   <button className="modal-primary disabled" type="button" disabled>준비 중인 게임</button>
                 )}
               </>
+            )}
+
+            {modal === 'auth' && (
+              <form className="auth-form" onSubmit={submitAuth}>
+                <span className="modal-kicker">MOYEO ACCOUNT</span>
+                <h3>{authMode === 'login' ? '다시 만나 👋' : '계정 만들기'}</h3>
+                <p>로그인은 선택이야. 계정이 있으면 나중에 닉네임, 전적, 친구 목록을 이어서 쓸 수 있어.</p>
+
+                <div className="auth-tabs" role="tablist" aria-label="로그인 또는 회원가입">
+                  <button type="button" className={authMode === 'login' ? 'active' : ''} onClick={() => { setAuthMode('login'); setAuthNotice('') }}>로그인</button>
+                  <button type="button" className={authMode === 'signup' ? 'active' : ''} onClick={() => { setAuthMode('signup'); setAuthNotice('') }}>회원가입</button>
+                </div>
+
+                {authMode === 'signup' && (
+                  <label className="auth-field">
+                    <span>게임에서 쓸 이름</span>
+                    <input
+                      value={authDisplayName}
+                      onChange={(event) => setAuthDisplayName(event.target.value)}
+                      placeholder={nickname || '닉네임'}
+                      maxLength={24}
+                      autoComplete="nickname"
+                    />
+                  </label>
+                )}
+
+                <label className="auth-field">
+                  <span>이메일</span>
+                  <input
+                    type="email"
+                    value={authEmail}
+                    onChange={(event) => setAuthEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                  />
+                </label>
+
+                <label className="auth-field">
+                  <span>비밀번호</span>
+                  <input
+                    type="password"
+                    value={authPassword}
+                    onChange={(event) => setAuthPassword(event.target.value)}
+                    placeholder="6자 이상"
+                    minLength={6}
+                    autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
+                  />
+                </label>
+
+                {authNotice && <p className="auth-notice" role="status">{authNotice}</p>}
+
+                <button className="modal-primary auth-submit" type="submit" disabled={authBusy}>
+                  {authBusy ? '처리 중...' : authMode === 'login' ? '로그인' : '계정 만들기'}
+                </button>
+                <p className="guest-reminder"><ShieldIcon /> 계정 없이도 닉네임만 입력하면 바로 플레이할 수 있어.</p>
+              </form>
             )}
           </section>
         </div>
