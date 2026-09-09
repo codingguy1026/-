@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  font-family: 'Noto Sans KR', system-ui, sans-serif;
+  color: #171717;
+  background: #f4efe7;
+  font-synthesis: none;
+  --ink: #171717;
+  --paper: #f4efe7;
+  --orange: #ff5a2f;
+  --yellow: #ffd635;
+  --blue: #3a55ff;
+  --lime: #b8f34a;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; background: var(--paper); }
+button, input { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+
+.site-shell { min-height: 100vh; overflow: hidden; }
+.topbar {
+  height: 82px; padding: 0 clamp(20px, 5vw, 72px); display: flex; align-items: center;
+  justify-content: space-between; border-bottom: 2px solid var(--ink); background: var(--paper);
+}
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.brand strong { font-family: 'Black Han Sans', sans-serif; font-size: 27px; letter-spacing: -1px; }
+.brand span:last-child { font-size: 10px; font-weight: 800; letter-spacing: .16em; }
+.brand-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--orange); align-self: center; }
+.tiny-link { font-size: 12px; font-weight: 900; letter-spacing: .08em; }
+
+.hero, .game-section { padding: clamp(56px, 8vw, 112px) clamp(20px, 7vw, 112px); }
+.eyebrow { margin: 0 0 28px; font-weight: 800; font-size: 14px; }
+.eyebrow span { color: #777; margin-left: 8px; }
+.hero-grid { display: grid; grid-template-columns: 1.45fr .55fr; gap: 48px; align-items: center; }
+.hero h1, .game-section h2, .play-panel h2 {
+  font-family: 'Black Han Sans', sans-serif; font-weight: 400; letter-spacing: -.045em; margin: 0;
+}
+.hero h1 { font-size: clamp(58px, 9vw, 138px); line-height: .94; }
+.hero h1 em { font-style: normal; color: var(--orange); }
+.hero-copy { margin: 34px 0 0; font-size: clamp(17px, 2vw, 25px); line-height: 1.55; font-weight: 700; }
+
+.scribble-card { width: min(100%, 330px); aspect-ratio: 1; position: relative; margin-left: auto; transform: rotate(5deg); }
+.scribble-card::before, .scribble-card::after { content: ''; position: absolute; inset: 9%; border: 5px solid var(--ink); border-radius: 44% 56% 51% 49% / 55% 43% 57% 45%; }
+.scribble-card::after { inset: 3% 13% 14% 4%; border-width: 2px; transform: rotate(-11deg); }
+.scribble-card > span { position: absolute; right: -2%; top: -11%; font-family: 'Black Han Sans'; font-size: 96px; color: var(--blue); transform: rotate(11deg); }
+.scribble-face { position: absolute; inset: 0; }
+.eye { position: absolute; width: 19px; height: 19px; border-radius: 50%; background: var(--ink); top: 42%; }
+.eye.left { left: 37%; } .eye.right { left: 58%; }
+.mouth { position: absolute; width: 60px; height: 31px; border: 5px solid var(--ink); border-top: 0; border-radius: 0 0 60px 60px; left: 43%; top: 57%; transform: translateX(-50%); }
+
+.game-section { background: var(--yellow); border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+.section-label { font-size: 12px; font-weight: 900; letter-spacing: .13em; margin-bottom: 46px; }
+.section-label b { margin-left: 14px; letter-spacing: 0; }
+.game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: end; }
+.game-section h2 { font-size: clamp(78px, 12vw, 175px); line-height: .75; }
+.game-section h2 span { color: var(--blue); }
+.game-copy { padding-bottom: 6px; }
+.game-copy > p { font-size: clamp(18px, 2.2vw, 28px); line-height: 1.55; font-weight: 800; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0; }
+.chips span { padding: 10px 15px; border: 2px solid var(--ink); border-radius: 999px; font-weight: 800; font-size: 13px; background: rgba(255,255,255,.24); }
+.text-button { border: 0; border-bottom: 2px solid var(--ink); background: transparent; padding: 3px 0; font-weight: 900; }
+
+.play-panel { display: grid; grid-template-columns: .9fr 1.1fr; min-height: 650px; border-bottom: 2px solid var(--ink); }
+.panel-copy { background: var(--blue); color: white; padding: clamp(48px, 7vw, 100px); display: flex; flex-direction: column; justify-content: center; }
+.mini-label { font-size: 11px; font-weight: 900; letter-spacing: .17em; }
+.panel-copy h2 { font-size: clamp(60px, 8vw, 112px); line-height: .92; margin: 22px 0 32px; }
+.panel-copy p { line-height: 1.75; font-size: 15px; font-weight: 600; }
+.join-card { background: #fffdf7; padding: clamp(48px, 8vw, 120px); display: flex; flex-direction: column; justify-content: center; }
+.join-card label { font-weight: 900; font-size: clamp(19px, 2vw, 27px); margin-bottom: 17px; }
+.join-card input, .code-input {
+  width: 100%; border: 0; border-bottom: 3px solid var(--ink); background: transparent; padding: 18px 2px;
+  outline: none; font-size: clamp(22px, 3vw, 38px); font-weight: 800;
+}
+.join-card input:focus, .code-input:focus { border-color: var(--orange); }
+.join-card input::placeholder, .code-input::placeholder { color: #c4c0b8; }
+.notice { margin: 13px 0 0; font-size: 13px; font-weight: 700; color: var(--orange); }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 32px; }
+.primary, .secondary { min-height: 58px; border: 2px solid var(--ink); border-radius: 2px; font-weight: 900; transition: transform .15s ease, box-shadow .15s ease; }
+.primary:hover, .secondary:hover { transform: translate(-2px,-2px); box-shadow: 4px 4px 0 var(--ink); }
+.primary { background: var(--orange); color: white; }
+.primary span { margin-left: 10px; }
+.secondary { background: white; color: var(--ink); }
+.signup-note { font-size: 12px; margin: 18px 0 0; color: #777; font-weight: 700; }
+.signup-note span { color: var(--lime); -webkit-text-stroke: 1px var(--ink); margin-right: 5px; }
+
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); }
+.steps article { min-height: 180px; display: flex; align-items: center; gap: 18px; padding: 36px clamp(20px, 4vw, 60px); border-right: 2px solid var(--ink); background: var(--paper); }
+.steps article:last-child { border-right: 0; }
+.steps b { font-family: 'Black Han Sans'; font-size: 50px; color: var(--orange); font-weight: 400; }
+.steps span { font-weight: 900; font-size: 18px; }
+footer { background: var(--ink); color: white; min-height: 260px; padding: 58px clamp(20px, 7vw, 112px); display: flex; align-items: end; justify-content: space-between; gap: 24px; }
+footer strong { font-family: 'Black Han Sans'; font-weight: 400; font-size: clamp(36px, 5vw, 72px); line-height: 1; }
+footer span { font-size: 12px; color: #bbb; font-weight: 700; }
+
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.58); display: grid; place-items: center; padding: 18px; z-index: 100; backdrop-filter: blur(4px); }
+.modal { width: min(540px, 100%); background: #fffdf7; border: 2px solid var(--ink); padding: 42px; box-shadow: 10px 10px 0 var(--ink); position: relative; }
+.close { position: absolute; right: 16px; top: 10px; border: 0; background: transparent; font-size: 34px; line-height: 1; }
+.modal h3 { font-family: 'Black Han Sans'; font-size: 48px; font-weight: 400; margin: 18px 0 13px; }
+.modal p { line-height: 1.65; color: #555; font-weight: 600; }
+.room-code, .practice-prompt { margin: 28px 0 16px; border: 2px solid var(--ink); padding: 24px; text-align: center; background: var(--yellow); font-family: 'Black Han Sans'; font-size: 48px; letter-spacing: .11em; }
+.practice-prompt { letter-spacing: -.02em; font-size: 30px; background: var(--lime); }
+.wide { width: 100%; margin-top: 12px; }
+.code-input { margin: 16px 0 22px; text-transform: uppercase; }
+
+@media (max-width: 760px) {
+  .topbar { height: 68px; }
+  .brand span:last-child, .tiny-link { display: none; }
+  .hero-grid, .game-grid, .play-panel { grid-template-columns: 1fr; }
+  .hero-grid { gap: 18px; }
+  .scribble-card { width: 190px; margin: 0 8% 0 auto; }
+  .game-copy { padding-top: 20px; }
+  .play-panel { min-height: auto; }
+  .panel-copy, .join-card { padding: 58px 24px; }
+  .steps { grid-template-columns: 1fr; }
+  .steps article { min-height: 110px; border-right: 0; border-bottom: 2px solid var(--ink); }
+  .steps article:last-child { border-bottom: 0; }
+  footer { flex-direction: column; align-items: flex-start; }
+  .modal { padding: 34px 24px 24px; }
+  .modal h3 { font-size: 39px; }
+}
